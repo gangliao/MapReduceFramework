@@ -1,0 +1,7 @@
+*
+!*.*
+*.o
+*.pb.*
+!Makefile
+!.gitignore
+

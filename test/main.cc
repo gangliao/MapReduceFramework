@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
         std::cerr << "Failed to retrieve the current directory." << std::endl;
         return EXIT_FAILURE;
     }
-	const std::string filename = std::string(cwd) + "/config.txt";
+	const std::string filename = std::string(cwd) + "/config.ini";
 	
 	MapReduce job;
 	return job.run(filename) ? EXIT_SUCCESS : EXIT_FAILURE;

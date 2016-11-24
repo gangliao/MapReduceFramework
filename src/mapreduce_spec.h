@@ -49,7 +49,7 @@ inline bool read_mr_spec_from_config_file(const std::string& config_filename, Ma
 	mr_spec.userId 		= map["user_id"][0];
 	mr_spec.workerNums 	= atoi(map["n_workers"][0].c_str());
 	mr_spec.outputNums 	= atoi(map["n_output_files"][0].c_str());
-	mr_spec.mapSize 	= atoi(map["mapSize"][0].c_str());
+	mr_spec.mapSize 	= atoi(map["mapSize"][0].c_str()) * 1024;
 	mr_spec.workerAddrs = std::move(map["worker_ipaddr_ports"]);
 	mr_spec.inputFiles 	= std::move(map["inputFiles"]);
 

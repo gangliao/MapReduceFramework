@@ -17,6 +17,7 @@ message MasterQuery {
 	int32 output_num = 2;			// number of outputs
 	string location = 3;			// location of intermediate files
 	bool is_map = 4;				// map or reduce function
+	string use_id = 5;				// use id
 }
 
 message ShardInfo {

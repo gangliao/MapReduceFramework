@@ -11,10 +11,10 @@ MR_WORKER_LIB = -L../external/lib -lmr_worker
 all: mrdemo mr_worker
 
 mrdemo: main.o
-	$(CXX) $^ $(LDFLAGS) $(MAPREDUCE_LIB) -o $@
+	$(CXX) $^ -o $@ $(LDFLAGS) $(MAPREDUCE_LIB) $(LDFLAGS)
 
 mr_worker: user_tasks.o
-	$(CXX) $^ $(LDFLAGS) $(MR_WORKER_LIB) -o $@
+	$(CXX) $^ -o $@ $(LDFLAGS) $(MR_WORKER_LIB) $(LDFLAGS)
 
 %.o: %.cc
 	$(CXX) -c $< -I../external/include $(CXXFLAGS)

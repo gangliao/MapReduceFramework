@@ -17,12 +17,12 @@ MR_WORKER_LIB = ../external/lib/libmr_worker.a
 
 all: system-check $(MAPREDUCE_LIB) $(MR_WORKER_LIB)
 
-$(MAPREDUCE_LIB): mapreduce.o mapreduce_impl.o
-	ar -rcs $@ mapreduce.o mapreduce_impl.o
+$(MAPREDUCE_LIB): masterworker.pb.o masterworker.grpc.pb.o mapreduce_impl.o mapreduce.o
+	ar -rcs $@ masterworker.pb.o masterworker.grpc.pb.o mapreduce_impl.o mapreduce.o
 	ranlib $@
 
-$(MR_WORKER_LIB): run_worker.o mr_task_factory.o
-	ar -rcs $@ run_worker.o mr_task_factory.o
+$(MR_WORKER_LIB): masterworker.pb.o masterworker.grpc.pb.o mr_task_factory.o run_worker.o
+	ar -rcs $@ masterworker.pb.o masterworker.grpc.pb.o mr_task_factory.o run_worker.o
 	ranlib $@
 
 %.o: %.cc
@@ -30,11 +30,15 @@ $(MR_WORKER_LIB): run_worker.o mr_task_factory.o
 
 .PRECIOUS: %.grpc.pb.cc
 %.grpc.pb.cc: %.proto
+	chmod 544 *.grpc.pb.* || true
 	$(PROTOC) -I $(PROTOS_PATH) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $<
+	chmod 444 *.grpc.pb.*
 
 .PRECIOUS: %.pb.cc
 %.pb.cc: %.proto
+	chmod 544 *.pb.* || true
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
+	chmod 444 *.pb.*
 
 clean:
 	rm -f *.o *.pb.cc *.pb.h $(MAPREDUCE_LIB) $(MR_WORKER_LIB)

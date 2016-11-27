@@ -35,7 +35,6 @@ We are describing here only the files which you are supposed to work on. For the
 6. **`worker.h`** - This is where you code how the workers will run map and reduce tasks on receiving a request from master, meanwhile simply waiting for a task the other times.
 
 ### How to run the test setup
-  - **`Note: we will soon provide the user's map & reduce implementation, input files for testing purpose. Meanwhile you can start without it on your development as rest of the things are not totally dependent on it. For input file you can have yuor own dummy(normal text) file to work with`**
   - Goto src directory and run `make` command.
   - Two libraries would be created in external directory: `libmapreduce.a` and `libmr_worker.a`.
   - Now goto test directory and run `make` command.

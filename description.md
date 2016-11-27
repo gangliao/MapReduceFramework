@@ -1,6 +1,7 @@
 ### Big picture
   - In this project, you are going to implement a simplied version of Map Reduce infrastructure. Please read [MapReduce](https://static.googleusercontent.com/media/research.google.com/en//archive/mapreduce-osdi04.pdf) paper, before you start.
   - This is going to be a long project, **Start late at your own risk** 
+  - Short [**video**](https://youtu.be/bwBrduQ1RUE) browsing through the project structure.
 
 ![Meme](https://memecrunch.com/meme/1HMYR/should-have-started-earlier/image.jpg?w=500&c=1)
 
@@ -75,7 +76,7 @@ The Rubric is:
 - **2.5 points** - `Reducer`: Reading respective intermediate files, passing the key, value pairs to the BaseReducer's implementation(UserReducer class), writing the output key, value pairs from it to the output files, ensuring that output is sorted on the output keys.
 
 ### Deliverables
-1. Please follow the instructions carefully. **You can handle the whole src folder as it is.** Specficially the folder you hand in must contain the following:
+1. Please follow the instructions carefully. **You can submit the whole src folder as it is.** Specficially the folder you hand in must contain the following:
   - `README` - Optional text file containing anything specific about the project that you want to tell the TAs.
   - `Makefile` - It is already given to you working for the files mentioned below. You might need to change it if you add more source files.
   - `Proto file` - **masterworker.proto** containing the grpc specification between master and worker.
@@ -86,4 +87,3 @@ The Rubric is:
   - `MapReduce Specification source file` - **mapreduce_spec.h** containing the source code for map reduce specification. All your data structure and logic for map reduce specification should be in this file only, no supporting files.
   - Again, if you have used additional supporting source files, don't forget to submit them.
 2. Hand in your folder as a zip file through [T-Square](t-square.gatech.edu)
-

@@ -2,16 +2,23 @@
 
 #include <mr_task_factory.h>
 #include <iostream>
-
+#include <cstring>
+#include <algorithm>
+#include <numeric>
 
 class UserMapper : public BaseMapper {
 
 	public:
 		virtual void map(const std::string& input_line) override {
-			std::cout << "UserMapper, I 'm not ready yet" << std::endl;
-			emit("some_key_from_map", "some_val_from_map");
+			char * c_input = new char [input_line.length()+1];
+			std::strcpy (c_input, input_line.c_str());
+			static const char* delims = " ,.\"'";
+			char *start = strtok (c_input, delims);
+			while (start != NULL) {
+				emit(start, "1");
+			    start = strtok (NULL, delims);
+			}
 		}
-
 };
 
 
@@ -19,8 +26,9 @@ class UserReducer : public BaseReducer {
 
 	public:
 		virtual void reduce(const std::string& key, const std::vector<std::string>& values) override {
-			std::cout << "UserReducer, I 'm not ready yet" << std::endl;
-			emit("some_key_from_reduce", "some_val_from_reduce");
+			std::vector<int> counts;
+			std::transform(values.cbegin(), values.cend(), std::back_inserter(counts), [](const std::string numstr){ return atoi(numstr.c_str()); });
+			emit(key, std::to_string(std::accumulate(counts.begin(), counts.end(), 0)));
 		}
 
 };

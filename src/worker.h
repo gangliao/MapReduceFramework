@@ -106,11 +106,11 @@ void CallData::Proceed() {
 		{
 			if(request_.is_map()) {
 				// map function
-				auto mapper = get_mapper_from_task_factory(request.use_id());
+				auto mapper = get_mapper_from_task_factory(request.user_id());
 				mapper->map("I m just a 'dummy', a \"dummy line\"");
 			} else {
 				// reduce function
-				auto reducer = get_reducer_from_task_factory(request.use_id());
+				auto reducer = get_reducer_from_task_factory(request.user_id());
 				reducer->reduce("dummy", std::vector<std::string>({"1", "1"}));
 			}
 			std::string prefix("Hello ");

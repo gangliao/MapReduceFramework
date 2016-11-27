@@ -97,7 +97,8 @@ bool Master::remoteCallMap(const std::string& ip_addr_port, const FileShard& fil
 
 	// 1. set grpc query parameters
 	MasterQuery query;
-	qurey.set_is_map(true);
+	query.set_is_map(true);
+	query.set_user_id(mr_spec_.userId);
 	query.set_output_num(mr_spec_.outputNums);
 	query.set_location(nullptr);
 
@@ -167,6 +168,7 @@ bool Master::remoteCallReduce(const std::string& ip_addr_port, const std::string
 	// 1. set grpc query parameters
 	MasterQuery query;
 	qurey.set_is_map(false);	// reduce procedure
+	query.set_user_id(mr_spec_.userId);
 	query.set_location(file_name);
 
 	// 2. set async grpc service

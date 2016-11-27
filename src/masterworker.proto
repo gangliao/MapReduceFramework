@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package masterworker;
+
+// The masterworker service definition.
+service MasterWorker {
+	rpc getProducts (MasterQuery) returns (WorkerReply) {}
+}
+
+message WorkerReply {
+	string location = 1;
+}
+
+message MasterQuery {
+	repeated InputShard shard = 1;	// input shard
+	int32 output_num = 2;			// number of outputs
+	bool is_map = 3;				// map or reduce function
+}
+
+message InputShard {
+	string filename = 1;
+	int32 off_start = 2;
+	int32 off_end = 3;
+}

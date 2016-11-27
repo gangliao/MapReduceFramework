@@ -17,7 +17,7 @@ class Worker {
 
 	private:
 		/* NOW you can add below, data members and member functions as per the need of your implementation*/
-
+		
 };
 
 
@@ -38,10 +38,10 @@ extern std::shared_ptr<BaseReducer> get_reducer_from_task_factory(const std::str
 bool Worker::run() {
 	/*  Below 4 lines are just examples of how you will call map and reduce 
 		Remove them once you start writing your own logic */ 
-	std::cout << "worker.run(), I 'm not ready yet" <<std::endl;
-	auto mapper = get_mapper_from_task_factory("cs6210");
-	mapper->map("some_input_map");
-	auto reducer = get_reducer_from_task_factory("cs6210");
-	reducer->reduce("some_input_key_reduce", std::vector<std::string>({"some_input_vals_reduce"}));
+//	std::cout << "worker.run(), I 'm not ready yet" <<std::endl;
+//	auto mapper = get_mapper_from_task_factory("cs6210");
+//	mapper->map("some_input_map");
+//	auto reducer = get_reducer_from_task_factory("cs6210");
+//	reducer->reduce("some_input_key_reduce", std::vector<std::string>({"some_input_vals_reduce"}));
 	return true;
 }

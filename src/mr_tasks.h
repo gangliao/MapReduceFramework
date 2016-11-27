@@ -24,7 +24,7 @@ struct BaseMapperInternal {
 		/* NOW you can add below, data members and member functions as per the need of your implementation*/
 		std::mutex mutex_;
 		std::string output_dir_;
-		int num_output_;
+		static int output_num_;
 };
 
 
@@ -36,7 +36,7 @@ inline BaseMapperInternal::BaseMapperInternal() {
 inline std::string BaseMapperInternal::hash2key(const std::string& key) {
 	std::hash<std::string> hash_func;
 	return output_dir_ + "/intermediate" + std::to_string(
-		hash_func(const_cast<std::string&>(key)) % num_output_) + ".txt";
+		hash_func(const_cast<std::string&>(key)) % output_num_) + ".txt";
 }
 
 /* CS6210_TASK Implement this function */

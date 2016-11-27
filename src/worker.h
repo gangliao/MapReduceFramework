@@ -2,6 +2,8 @@
 
 #include <grpc++/grpc++.h>
 #include <mr_task_factory.h>
+#include <iostream>
+#include <fstream>
 
 #include "mr_tasks.h"
 #include "masterworker.grpc.pb.h"
@@ -61,6 +63,9 @@ class CallData {
 		void Proceed();
 
 	private:
+		void MapProceed();
+		void ReduceProceed();
+		
 		// The means of communication with the gRPC runtime for an asynchronous
 		// server.
 		MasterWorker::AsyncService* service_;
@@ -106,12 +111,10 @@ void CallData::Proceed() {
 		{
 			if(request_.is_map()) {
 				// map function
-				auto mapper = get_mapper_from_task_factory(request.user_id());
-				mapper->map("I m just a 'dummy', a \"dummy line\"");
+				MapProceed();
 			} else {
 				// reduce function
-				auto reducer = get_reducer_from_task_factory(request.user_id());
-				reducer->reduce("dummy", std::vector<std::string>({"1", "1"}));
+				ReduceProceed();
 			}
 			std::string prefix("Hello ");
 			reply_.set_message(prefix + request_.name());
@@ -129,6 +132,70 @@ void CallData::Proceed() {
 	}
 }
 
+void CallData::MapProceed() {
+	// init output_num for hash the key into R regions
+	BaseMapperInternal::output_num_ = request_.output_num();
+
+	// find the corresponding map function
+	auto mapper = get_mapper_from_task_factory(request.user_id());
+
+	int size = request_.shard_size();
+	for (int i = 0; i < size; ++i) {
+		// read shard info from proto
+		ShardInfo shard_info = request_.shard(i);
+		std::string filename = shard_info.filename();
+		std::streampos off_start = shard_info.off_start();
+		std::streampos off_end = shard_info.off_end();
+		
+		std::ifstream myfile(filename, std::ios::binary);
+		if (myfile.is_open()) {
+			// find file shard: begin offset
+			myfile.seekg(off_start);
+			std::string line;
+			while (getline(myfile, line)) {	
+				mapper->map(line);
+				if (off_end == myfile.tellg()) {
+					// reach file shard: end offset
+					break;
+				}
+			}
+			myfile.close();
+		} else {
+			std::cerr << "Failed to open file " << filename << std::endl;
+			exit(-1);
+		}
+	}
+}
+
+void CallData::ReduceProceed() {
+	std::string filename = request_.location();
+	std::ifstream myfile(filename, std::ios::binary);
+
+	std::unorder_map<std::string, std::vector<std::string> > kv_store;
+
+	if (myfile.is_open()) {
+		std::string line;
+		while (getline(myfile, line)) {
+			char key[100];
+			int value;
+			sscanf(line,c_str(), "%s %d", key, &value);
+			kv_store[key].push_back(std::to_string(value));
+		}
+		myfile.close();
+	} else {
+		std::cerr << "Failed to open file " << filename << std::endl;
+		exit(-1);
+	}
+
+	// sort all key : list value pairs
+
+	// reducer function
+	auto reducer = get_reducer_from_task_factory(request.user_id());
+
+	for (auto& kv : kv_store) {
+		reducer->reduce(kv.first, kv.second);
+	}
+}
 
 /* CS6210_TASK: ip_addr_port is the only information you get when started.
 	You can populate your other class data members here if you want */

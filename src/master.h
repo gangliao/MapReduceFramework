@@ -100,7 +100,6 @@ bool Master::remoteCallMap(const std::string& ip_addr_port, const FileShard& fil
 	query.set_is_map(true);
 	query.set_user_id(mr_spec_.userId);
 	query.set_output_num(mr_spec_.outputNums);
-	query.set_location(nullptr);
 
 	for (auto& shardmap : file_shard.shardsMap) {
 		ShardInfo* shard_info = query.add_shard();

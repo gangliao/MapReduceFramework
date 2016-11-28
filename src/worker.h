@@ -111,10 +111,17 @@ void CallData::Proceed() {
 		{
 			if(request_.is_map()) {
 				// map function
+				// init output_num for hash the key into R regions
+				BaseMapperInternal::output_num_ = request_.output_num();
 				MapProceed();
+				TempFiles* tempfile = reply_.add_temp_files();
+				for (auto& filename : BaseMapperInternal::temp_files_) {
+					tempfile.set_filename(filename);
+				}
 			} else {
 				// reduce function
 				ReduceProceed();
+				reply_.is_done(true);
 			}
 			std::string prefix("Hello ");
 			reply_.set_message(prefix + request_.name());
@@ -133,9 +140,6 @@ void CallData::Proceed() {
 }
 
 void CallData::MapProceed() {
-	// init output_num for hash the key into R regions
-	BaseMapperInternal::output_num_ = request_.output_num();
-
 	// find the corresponding map function
 	auto mapper = get_mapper_from_task_factory(request.user_id());
 
@@ -169,9 +173,17 @@ void CallData::MapProceed() {
 
 void CallData::ReduceProceed() {
 	std::string filename = request_.location();
+
+	// parse filename to extract hash2key number for naming output
+	int hash2key;
+	sscanf(filename, "output/temp%d.txt", &hash2key);
+	BaseReducerInternal::file_number_ = hash2key;
+
+	// read temp files from local disk
 	std::ifstream myfile(filename, std::ios::binary);
 
-	std::unorder_map<std::string, std::vector<std::string> > kv_store;
+	// sorted by its key
+	std::map<std::string, std::vector<std::string> > kv_store;
 
 	if (myfile.is_open()) {
 		std::string line;
@@ -186,8 +198,6 @@ void CallData::ReduceProceed() {
 		std::cerr << "Failed to open file " << filename << std::endl;
 		exit(-1);
 	}
-
-	// sort all key : list value pairs
 
 	// reducer function
 	auto reducer = get_reducer_from_task_factory(request.user_id());

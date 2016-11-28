@@ -8,8 +8,12 @@ service MasterWorker {
 }
 
 message WorkerReply {
-	string location = 1;
+	repeated TempFiles temp_files = 1;
 	bool is_done = 2;
+}
+
+message TempFiles {
+	string filename = 1;
 }
 
 message MasterQuery {

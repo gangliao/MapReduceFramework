@@ -55,7 +55,7 @@ class Master {
 Master::Master(const MapReduceSpec& mr_spec, const std::vector<FileShard>& file_shards) {
 	// register built-in thread pool for master
 	// for simplicity, thread and worker connection is one-to-one map
-	thread_pool_ = make_unique<ThreadPool>();
+	thread_pool_ = make_unique<ThreadPool>(mr_spec.workerNums);
 	mr_spec_ = mr_spec;
 	file_shards_ = std::move(file_shards);
 
@@ -71,7 +71,7 @@ inline std::string Master::selectIdleWorker() {
 			return work_addr;
 		}
 	}
-	return NULL;
+	return "";
 }
 
 bool Master::runMapProc() {
@@ -80,7 +80,6 @@ bool Master::runMapProc() {
 		thread_pool_->AddTask([&]() {
 			// find an idle worker
 			do {
-				std::this_thread::sleep_for(std::chrono::milliseconds(500));
 				{
 					std::lock_guard<std::mutex> lock(mutex_);
 					idleWorker = selectIdleWorker();
@@ -107,10 +106,9 @@ bool Master::remoteCallMap(const std::string& ip_addr_port, const FileShard& fil
 	for (auto& shardmap : file_shard.shardsMap) {
 		ShardInfo* shard_info = query.add_shard();
 		shard_info->set_filename(shardmap.first);
-		shard_info->set_off_start(shardmap.second.first);
-		shard_info->set_off_end(shardmap.second.second);
+		shard_info->set_off_start(static_cast<int>(shardmap.second.first));
+		shard_info->set_off_end(static_cast<int>(shardmap.second.second));
 	}
-
 	// 2. set async grpc service
 	WorkerReply reply;
 	grpc::ClientContext context;
@@ -152,7 +150,6 @@ bool Master::runReduceProc() {
 		thread_pool_->AddTask([&]() {
 			// find an idle worker
 			do {
-				std::this_thread::sleep_for(std::chrono::milliseconds(500));
 				{
 					std::lock_guard<std::mutex> lock(mutex_);
 					idleWorker = selectIdleWorker();

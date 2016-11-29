@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <utility>
+#include <climits>
 #include <unordered_map>
 #include "mapreduce_spec.h"
 
@@ -62,14 +63,17 @@ inline bool shard_files(const MapReduceSpec& mr_spec, std::vector<FileShard>& fi
             std::streampos begin = myfile.tellg();
 
             // find offset end for a shard
-            offset += mr_spec.mapSize;
-            myfile.seekg(offset, std::ios::beg);
+            myfile.seekg(mr_spec.mapSize, std::ios::cur);
             std::streampos end = myfile.tellg();
+
             // if offset exceed size, set its end position
-            if (end == -1) {
+            if (static_cast<int>(end) == -1) {
                 myfile.seekg(0, std::ios::end);
-                end = myfile.tellg();
+            } else {
+                // find closest '\n' delimit
+                myfile.ignore(LONG_MAX,'\n');
             }
+            end = myfile.tellg();
 
             size_t chunkSize = (end - begin);
             fileSize -= chunkSize;
@@ -81,20 +85,14 @@ inline bool shard_files(const MapReduceSpec& mr_spec, std::vector<FileShard>& fi
                         std::make_pair(begin, end);
                     break;
                 } else {
-                    std::streampos chunk_beg = begin;
-                    std::streampos chunk_end = begin;
-                    chunk_end += restSize;
-
                     shard.currentSize += restSize; 
                     shard.shardsMap[input] =
-                        std::make_pair(chunk_beg, chunk_end);
-
+                        std::make_pair(begin, static_cast<int>(begin) + restSize);
                     chunkSize -= restSize;
                     begin += (restSize + 1);
                 }
             }
-            offset = end;
-            offset += 1;
+            offset = static_cast<int>(end) + 1;
         }
         myfile.close();
     }

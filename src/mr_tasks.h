@@ -25,8 +25,8 @@ struct BaseMapperInternal {
 	/* NOW you can add below, data members and member functions as per the need of your implementation*/
 	std::mutex mutex_;
 	std::string output_dir_;
-	static std::unordered_set<std::string> temp_files_;
-	static int output_num_;
+	std::unordered_set<std::string> temp_files_;
+	int output_num_;
 };
 
 
@@ -37,7 +37,6 @@ inline std::string BaseMapperInternal::hash2key(const std::string& key) {
 	std::hash<std::string> hash_func;
 	std::string temp_file = "output/temp" +
 		std::to_string(hash_func(const_cast<std::string&>(key)) % output_num_) + ".txt";
-	temp_files_.insert(temp_file);
 	return temp_file;
 }
 
@@ -54,6 +53,7 @@ inline void BaseMapperInternal::emit(const std::string& key, const std::string& 
 		std::cerr << "Failed to open file " << filename << std::endl;
 		exit(-1);
 	}
+	temp_files_.insert(filename);
 }
 
 
@@ -71,7 +71,7 @@ struct BaseReducerInternal {
 	void emit(const std::string& key, const std::string& val);
 
 	/* NOW you can add below, data members and member functions as per the need of your implementation*/
-	static int file_number_;
+	int file_number_;
 	std::mutex mutex_;
 	std::string output_dir_;
 };

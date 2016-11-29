@@ -3,6 +3,7 @@
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
 #include <mr_task_factory.h>
+#include <unordered_set>
 #include <iostream>
 #include <fstream>
 
@@ -46,6 +47,15 @@ class Worker {
 		friend class CallData;
 		// This can be run in multiple threads if needed.
 		void HandleRpcs();
+		static void SetOutputNum(std::shared_ptr<BaseMapper>& mapper, const int size) {
+			mapper->impl_->output_num_ = size;
+		}
+		static void SetFileNumber(std::shared_ptr<BaseReducer>& reducer, const int number) {
+			reducer->impl_->file_number_ = number;
+		}
+		static std::unordered_set<std::string> GetTempFiles(std::shared_ptr<BaseMapper>& mapper) {
+			return std::move(mapper->impl_->temp_files_);
+		}
 
 		std::unique_ptr<ServerCompletionQueue> cq_;
   		MasterWorker::AsyncService service_;
@@ -117,16 +127,10 @@ void CallData::Proceed() {
 			if(request_.is_map()) {
 				// map function
 				// init output_num for hash the key into R regions
-				BaseMapperInternal::output_num_ = request_.output_num();
 				MapProceed();
-				masterworker::TempFiles* tempfile = reply_.add_temp_files();
-				for (auto& filename : BaseMapperInternal::temp_files_) {
-					tempfile->set_filename(filename);
-				}
 			} else {
 				// reduce function
 				ReduceProceed();
-				reply_.set_is_done(true);
 			}
 		}
 
@@ -145,6 +149,7 @@ void CallData::Proceed() {
 void CallData::MapProceed() {
 	// find the corresponding map function
 	auto mapper = get_mapper_from_task_factory(request_.user_id());
+	Worker::SetOutputNum(mapper, request_.output_num());
 
 	int size = request_.shard_size();
 	for (int i = 0; i < size; ++i) {
@@ -172,15 +177,24 @@ void CallData::MapProceed() {
 			exit(-1);
 		}
 	}
+
+	auto temp_files = Worker::GetTempFiles(mapper);
+	masterworker::TempFiles* tempfile = reply_.add_temp_files();
+	for (auto& filename : temp_files) {
+		tempfile->set_filename(filename);
+	}
 }
 
 void CallData::ReduceProceed() {
 	std::string filename = request_.location();
 
+	// reducer function
+	auto reducer = get_reducer_from_task_factory(request_.user_id());
+
 	// parse filename to extract hash2key number for naming output
 	int hash2key;
 	sscanf(filename.c_str(), "output/temp%d.txt", &hash2key);
-	BaseReducerInternal::file_number_ = hash2key;
+	Worker::SetFileNumber(reducer, hash2key);
 
 	// read temp files from local disk
 	std::ifstream myfile(filename, std::ios::binary);
@@ -202,12 +216,11 @@ void CallData::ReduceProceed() {
 		exit(-1);
 	}
 
-	// reducer function
-	auto reducer = get_reducer_from_task_factory(request_.user_id());
-
 	for (auto& kv : kv_store) {
 		reducer->reduce(kv.first, kv.second);
 	}
+
+	reply_.set_is_done(true);
 }
 
 /* CS6210_TASK: ip_addr_port is the only information you get when started.
@@ -253,7 +266,7 @@ void Worker::HandleRpcs() {
 bool Worker::run() {
 	/*  Below 5 lines are just examples of how you will call map and reduce
 		Remove them once you start writing your own logic */
-	
+
 	// Proceed to the server's main loop.
     HandleRpcs();
 

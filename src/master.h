@@ -1,6 +1,8 @@
 #pragma once
 
 #include <grpc++/grpc++.h>
+#include <grpc/support/log.h>
+#include <unordered_set>
 #include "masterworker.grpc.pb.h"
 #include "mapreduce_spec.h"
 #include "file_shard.h"
@@ -11,6 +13,7 @@ using masterworker::MasterWorker;
 using masterworker::MasterQuery;
 using masterworker::WorkerReply;
 using masterworker::ShardInfo;
+using masterworker::TempFiles;
 
 namespace {
 	enum WORKER_STATUS {
@@ -52,7 +55,7 @@ class Master {
 Master::Master(const MapReduceSpec& mr_spec, const std::vector<FileShard>& file_shards) {
 	// register built-in thread pool for master
 	// for simplicity, thread and worker connection is one-to-one map
-	thread_pool_ = make_unique<ThreadPool>(mr_spec);
+	thread_pool_ = make_unique<ThreadPool>();
 	mr_spec_ = mr_spec;
 	file_shards_ = std::move(file_shards);
 
@@ -84,7 +87,7 @@ bool Master::runMapProc() {
 				}
 			} while(idleWorker.empty());
 			// map function ...
-			GRPC_ASSERT(remoteCallMap(idleWorker, file_shards_[i]));
+			GPR_ASSERT(remoteCallMap(idleWorker, file_shards_[i]));
 		});
 	}
 	return true;
@@ -131,7 +134,11 @@ bool Master::remoteCallMap(const std::string& ip_addr_port, const FileShard& fil
 	}
 
 	// 3. finish grpc, master receive intermediate file names
-	temp_filename_.insert(reply.location());
+	int size = reply.temp_files_size();
+	for(int i = 0; i < size; ++i) {
+		TempFiles temp_file = reply.temp_files(i);
+		temp_filename_.insert(temp_file.filename());
+	}
 
 	// 4. recover server to available
 	worker_status_[ip_addr_port] = AVAILABLE;
@@ -139,7 +146,7 @@ bool Master::remoteCallMap(const std::string& ip_addr_port, const FileShard& fil
 	return true;
 }
 
-bool Master::runMapProc() {
+bool Master::runReduceProc() {
 	std::string idleWorker;
 	for(auto& temp_input : temp_filename_) {
 		thread_pool_->AddTask([&]() {
@@ -152,7 +159,7 @@ bool Master::runMapProc() {
 				}
 			} while(idleWorker.empty());
 			// map function ...
-			GRPC_ASSERT(remoteCallReduce(idleWorker, temp_input));
+			GPR_ASSERT(remoteCallReduce(idleWorker, temp_input));
 		});
 	}
 	return true;
@@ -166,7 +173,7 @@ bool Master::remoteCallReduce(const std::string& ip_addr_port, const std::string
 
 	// 1. set grpc query parameters
 	MasterQuery query;
-	qurey.set_is_map(false);	// reduce procedure
+	query.set_is_map(false);	// reduce procedure
 	query.set_user_id(mr_spec_.userId);
 	query.set_location(file_name);
 
@@ -207,6 +214,6 @@ bool Master::remoteCallReduce(const std::string& ip_addr_port, const std::string
 bool Master::run() {
 	GPR_ASSERT(runMapProc());
 	// for simplicity, once all map tasks done, reduce will start to execution
-	GRP_ASSERT(runReduceProc());
+	GPR_ASSERT(runReduceProc());
 	return true;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <grpc++/grpc++.h>
+#include <grpc/support/log.h>
 #include <mr_task_factory.h>
 #include <iostream>
 #include <fstream>
@@ -18,6 +19,10 @@ using masterworker::MasterWorker;
 using masterworker::MasterQuery;
 using masterworker::WorkerReply;
 using masterworker::ShardInfo;
+
+
+extern std::shared_ptr<BaseReducer> get_reducer_from_task_factory(const std::string& user_id);
+extern std::shared_ptr<BaseMapper> get_mapper_from_task_factory(const std::string& user_id);
 
 /* CS6210_TASK: Handle all the task a Worker is supposed to do.
 	This is a big task for this project, will test your understanding of map reduce */
@@ -82,7 +87,7 @@ class CallData {
 		WorkerReply reply_;
 
 		// The means to get back to the client.
-		ServerAsyncResponseWriter<HelloReply> responder_;
+		ServerAsyncResponseWriter<WorkerReply> responder_;
 
 		// Let's implement a tiny state machine with the following states.
 		enum CallStatus { CREATE, PROCESS, FINISH };
@@ -114,17 +119,15 @@ void CallData::Proceed() {
 				// init output_num for hash the key into R regions
 				BaseMapperInternal::output_num_ = request_.output_num();
 				MapProceed();
-				TempFiles* tempfile = reply_.add_temp_files();
+				masterworker::TempFiles* tempfile = reply_.add_temp_files();
 				for (auto& filename : BaseMapperInternal::temp_files_) {
-					tempfile.set_filename(filename);
+					tempfile->set_filename(filename);
 				}
 			} else {
 				// reduce function
 				ReduceProceed();
-				reply_.is_done(true);
+				reply_.set_is_done(true);
 			}
-			std::string prefix("Hello ");
-			reply_.set_message(prefix + request_.name());
 		}
 
 		// And we are done! Let the gRPC runtime know we've finished, using the
@@ -141,7 +144,7 @@ void CallData::Proceed() {
 
 void CallData::MapProceed() {
 	// find the corresponding map function
-	auto mapper = get_mapper_from_task_factory(request.user_id());
+	auto mapper = get_mapper_from_task_factory(request_.user_id());
 
 	int size = request_.shard_size();
 	for (int i = 0; i < size; ++i) {
@@ -176,7 +179,7 @@ void CallData::ReduceProceed() {
 
 	// parse filename to extract hash2key number for naming output
 	int hash2key;
-	sscanf(filename, "output/temp%d.txt", &hash2key);
+	sscanf(filename.c_str(), "output/temp%d.txt", &hash2key);
 	BaseReducerInternal::file_number_ = hash2key;
 
 	// read temp files from local disk
@@ -190,7 +193,7 @@ void CallData::ReduceProceed() {
 		while (getline(myfile, line)) {
 			char key[100];
 			int value;
-			sscanf(line,c_str(), "%s %d", key, &value);
+			sscanf(line.c_str(), "%s %d", key, &value);
 			kv_store[key].push_back(std::to_string(value));
 		}
 		myfile.close();
@@ -200,7 +203,7 @@ void CallData::ReduceProceed() {
 	}
 
 	// reducer function
-	auto reducer = get_reducer_from_task_factory(request.user_id());
+	auto reducer = get_reducer_from_task_factory(request_.user_id());
 
 	for (auto& kv : kv_store) {
 		reducer->reduce(kv.first, kv.second);
@@ -241,8 +244,6 @@ void Worker::HandleRpcs() {
 	}
 }
 
-extern std::shared_ptr<BaseMapper> get_mapper_from_task_factory(const std::string& user_id);
-extern std::shared_ptr<BaseReducer> get_reducer_from_task_factory(const std::string& user_id);
 
 /* CS6210_TASK: Here you go. once this function is called your woker's job is to keep looking for new tasks 
 	from Master, complete when given one and again keep looking for the next one.

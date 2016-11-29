@@ -102,6 +102,7 @@ private:
     bool needStop_;
 };
 
+static int maxThreadCnt_ = 100;
 class ThreadPool {
 public:
     using Task = std::function<void()>;
@@ -160,5 +161,4 @@ private:
     SyncQueue<Task> queue_;
     std::atomic_bool running_;
     std::once_flag flag_;
-    int maxThreadCnt_ = 100;
 };

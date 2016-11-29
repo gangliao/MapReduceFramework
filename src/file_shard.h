@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <utility>
 #include <unordered_map>
 #include "mapreduce_spec.h"
 
@@ -77,7 +78,7 @@ inline bool shard_files(const MapReduceSpec& mr_spec, std::vector<FileShard>& fi
                 if (restSize >= chunkSize) {
                     shard.currentSize += chunkSize;
                     shard.shardsMap[input] =
-                        std::make_pair<std::streampos, std::streampos>(begin, end);
+                        std::make_pair(begin, end);
                     break;
                 } else {
                     std::streampos chunk_beg = begin;
@@ -86,7 +87,7 @@ inline bool shard_files(const MapReduceSpec& mr_spec, std::vector<FileShard>& fi
 
                     shard.currentSize += restSize; 
                     shard.shardsMap[input] =
-                        std::make_pair<std::streampos, std::streampos>(chunk_beg, chunk_end);
+                        std::make_pair(chunk_beg, chunk_end);
 
                     chunkSize -= restSize;
                     begin += (restSize + 1);

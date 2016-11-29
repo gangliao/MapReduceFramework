@@ -5,7 +5,9 @@
 #include <unistd.h>
 #include <mapreduce.h>
 
+#ifndef PATH_MAX
 #define PATH_MAX 200
+#endif
 
 int main(int argc, char **argv) {
 

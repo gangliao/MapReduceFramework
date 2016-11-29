@@ -1,9 +1,19 @@
+HOST_SYSTEM = $(shell uname | cut -f 1 -d_)
+SYSTEM ?= $(HOST_SYSTEM)
+
 CXX = g++
 CPPFLAGS += -I/usr/local/include -pthread
 CXXFLAGS += -std=c++11 -g
+
+ifeq ($(SYSTEM), Darwin)
+LDFLAGS += -L/usr/local/lib `pkg-config --libs grpc++ grpc`       \
+           -lgrpc++_reflection \
+           -lprotobuf -lpthread -ldl
+else
 LDFLAGS += -L/usr/local/lib `pkg-config --libs grpc++ grpc`       \
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed \
            -lprotobuf -lpthread -ldl
+endif
 
 MAPREDUCE_LIB = -L../external/lib -lmapreduce 
 MR_WORKER_LIB = -L../external/lib -lmr_worker

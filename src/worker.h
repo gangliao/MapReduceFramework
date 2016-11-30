@@ -115,6 +115,7 @@ void CallData::Proceed() {
 		// the tag uniquely identifying the request (so that different CallData
 		// instances can serve different requests concurrently), in this case
 		// the memory address of this CallData instance.
+		std::cout << "Waiting tasks from master ..." << std::endl;
 		service_->RequestmapReduce(&ctx_, &request_, &responder_, cq_, cq_, this);
 	} else if (status_ == PROCESS) {
 		// Spawn a new CallData instance to serve new clients while we process
@@ -123,16 +124,18 @@ void CallData::Proceed() {
 		new CallData(service_, cq_);
 
 		// The actual processing.
-		{
-			if(request_.is_map()) {
-				// map function
-				// init output_num for hash the key into R regions
-				MapProceed();
-			} else {
-				// reduce function
-				ReduceProceed();
-			}
-		}
+		if(request_.is_map()) {
+			// map function
+			// init output_num for hash the key into R regions
+			std::cout << "Receive map task from master ..." << std::endl;
+			MapProceed();
+			std::cout << "map task done, send back to master ..." << std::endl; 
+		} else {
+			// reduce function
+			std::cout << "Receive reduce task from master ..." << std::endl;
+			ReduceProceed();
+			std::cout << "reduce task done, send back to master ..." << std::endl; 
+		}	
 
 		// And we are done! Let the gRPC runtime know we've finished, using the
 		// memory address of this instance as the uniquely identifying tag for

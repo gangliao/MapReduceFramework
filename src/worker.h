@@ -161,7 +161,8 @@ void CallData::MapProceed() {
 		std::string filename = shard_info.filename();
 		std::streampos off_start = shard_info.off_start();
 		std::streampos off_end = shard_info.off_end();
-		
+		std::cout << "Map on " << filename << " offset (" << off_start
+				  << "," << off_end << ") ... " << std::endl;
 		std::ifstream myfile(filename, std::ios::binary);
 		if (myfile.is_open()) {
 			// find file shard: begin offset
@@ -182,9 +183,9 @@ void CallData::MapProceed() {
 	}
 
 	auto temp_files = Worker::GetTempFiles(mapper);
-	masterworker::TempFiles* tempfile = reply_.add_temp_files();
 	for (auto& filename : temp_files) {
-		tempfile->set_filename(filename);
+		std::cout << filename << std::endl;
+		reply_.add_temp_files()->set_filename(filename);
 	}
 }
 

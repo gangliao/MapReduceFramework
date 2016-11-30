@@ -3,6 +3,7 @@
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
 #include <unordered_set>
+#include <unistd.h>
 #include "masterworker.grpc.pb.h"
 #include "mapreduce_spec.h"
 #include "file_shard.h"
@@ -47,6 +48,7 @@ class Master {
 		std::unordered_set<std::string> temp_filename_;
 		std::unique_ptr<ThreadPool> thread_pool_;
 		std::mutex mutex_;
+		std::mutex mutexmap_;
 };
 
 
@@ -75,10 +77,9 @@ inline std::string Master::selectIdleWorker() {
 }
 
 bool Master::runMapProc() {
-	std::string idleWorker;
 	for (int i = 0; i < file_shards_.size(); ++i) {
-		thread_pool_->AddTask([&]() {
-			// find an idle worker
+		thread_pool_->AddTask([&, i]() {
+			std::string idleWorker;
 			do {
 				{
 					std::lock_guard<std::mutex> lock(mutex_);
@@ -86,7 +87,7 @@ bool Master::runMapProc() {
 				}
 			} while(idleWorker.empty());
 			// map function ...
-			GPR_ASSERT(remoteCallMap(idleWorker, file_shards_[i]));
+			remoteCallMap(idleWorker, file_shards_[i]);
 		});
 	}
 	return true;
@@ -108,6 +109,13 @@ bool Master::remoteCallMap(const std::string& ip_addr_port, const FileShard& fil
 		shard_info->set_filename(shardmap.first);
 		shard_info->set_off_start(static_cast<int>(shardmap.second.first));
 		shard_info->set_off_end(static_cast<int>(shardmap.second.second));
+		// std::cout << "remoteCallMap " << ip_addr_port << std::endl;
+		{
+			std::lock_guard<std::mutex> lock(mutexmap_);
+			std::cout << "remoteCallMap " << shardmap.first << std::endl;
+			std::cout << "remoteCallMap " << shardmap.second.first << std::endl;
+			std::cout << "remoteCallMap " << shardmap.second.second << std::endl;
+		}
 	}
 	// 2. set async grpc service
 	WorkerReply reply;
@@ -132,10 +140,15 @@ bool Master::remoteCallMap(const std::string& ip_addr_port, const FileShard& fil
 	}
 
 	// 3. finish grpc, master receive intermediate file names
-	int size = reply.temp_files_size();
-	for(int i = 0; i < size; ++i) {
-		TempFiles temp_file = reply.temp_files(i);
-		temp_filename_.insert(temp_file.filename());
+	{
+		std::lock_guard<std::mutex> lock(mutexmap_);
+		std::cout << ip_addr_port << std::endl;
+		int size = reply.temp_files_size();
+		for(int i = 0; i < size; ++i) {
+			TempFiles temp_file = reply.temp_files(i);
+			temp_filename_.insert(temp_file.filename());
+			std::cout << temp_file.filename() << std::endl;
+		}
 	}
 
 	// 4. recover server to available
@@ -145,10 +158,9 @@ bool Master::remoteCallMap(const std::string& ip_addr_port, const FileShard& fil
 }
 
 bool Master::runReduceProc() {
-	std::string idleWorker;
 	for(auto& temp_input : temp_filename_) {
 		thread_pool_->AddTask([&]() {
-			// find an idle worker
+			std::string idleWorker;
 			do {
 				{
 					std::lock_guard<std::mutex> lock(mutex_);
@@ -156,9 +168,14 @@ bool Master::runReduceProc() {
 				}
 			} while(idleWorker.empty());
 			// map function ...
-			GPR_ASSERT(remoteCallReduce(idleWorker, temp_input));
+			remoteCallReduce(idleWorker, temp_input);
 		});
 	}
+	
+	// waiting all map task done
+	do{
+		sleep(1000);
+	} while(!thread_pool_->PoolEmpty());
 	return true;
 }
 

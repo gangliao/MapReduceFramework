@@ -126,7 +126,11 @@ public:
     void AddTask(const Task& task) {
         queue_.Put(task);
     }
-    
+
+    bool PoolEmpty() {
+        return queue_.Empty();
+    }
+
 private:
     void Start(int numThreads) {
         running_ = true;

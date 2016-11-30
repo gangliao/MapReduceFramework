@@ -11,8 +11,6 @@
 /* CS6210_TASK Implement this data structureas per your implementation.
 		You will need this when your worker is running the map task*/
 
-#define  MAX_BUFFER_SIZE	3000		
-
 struct BaseMapperInternal {
 
 	/* DON'T change this function's signature */

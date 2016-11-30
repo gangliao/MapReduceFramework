@@ -29,11 +29,11 @@ inline bool read_mr_spec_from_config_file(const std::string& config_filename, Ma
 		std::string line;
 		char headStr[200];
 		char tailStr[200];
-		char comp[20];
+		char comp[200];
 		while (getline(myfile, line)) {
 			sscanf(line.c_str(), "%[A-Z,a-z,_]=%s", headStr, tailStr);
 			std::istringstream input(tailStr);
-			while(input.getline(comp, 20, ',')) {
+			while(input.getline(comp, 200, ',')) {
 				map[headStr].push_back(comp);
 			}
 		}
@@ -49,9 +49,9 @@ inline bool read_mr_spec_from_config_file(const std::string& config_filename, Ma
 	mr_spec.userId 		= map["user_id"][0];
 	mr_spec.workerNums 	= atoi(map["n_workers"][0].c_str());
 	mr_spec.outputNums 	= atoi(map["n_output_files"][0].c_str());
-	mr_spec.mapSize 	= atoi(map["mapSize"][0].c_str());
+	mr_spec.mapSize 	= atoi(map["map_kilobytes"][0].c_str());
 	mr_spec.workerAddrs = std::move(map["worker_ipaddr_ports"]);
-	mr_spec.inputFiles 	= std::move(map["inputFiles"]);
+	mr_spec.inputFiles 	= std::move(map["input_files"]);
 
 	return true;
 }
@@ -72,11 +72,11 @@ inline bool validate_mr_spec(const MapReduceSpec& mr_spec) {
 	}
 
 	// validate worker address port
-	char hostName[20];
-	int port;
+	char hostName[50];
+	char port[50];
 	for (auto& addr : mr_spec.workerAddrs) {
-		sscanf(addr.c_str(), "%s:%d", hostName, &port);
-		assert(port <= 65535 && port >= 5000);
+		sscanf(addr.c_str(), "%[a-z,]:%[0-9]", hostName, port);
+		assert(atoi(port) <= 65535);
 		assert(strncmp(hostName, "localhost", 9) == 0);
 	}
 

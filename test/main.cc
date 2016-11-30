@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 	const std::string filename = std::string(cwd) + "/config.ini";
-	
+
 	MapReduce job;
 	return job.run(filename) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

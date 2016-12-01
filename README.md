@@ -1,7 +1,5 @@
 # MapReduce Infrastructure
 
-[Project Description](description.md)
-
 ## Install Dependency
 
 [How to setup the project](INSTALL.md)
@@ -18,35 +16,49 @@
 section to find out much more details.
 2. Compile code and generate libraries
     - Goto src directory and run `make` command, two libraries would be created in external directory: `libmapreduce.a` and `libmr_worker.a`.
+ 
         ```bash
             cd src && make
         ```
+
     - Now goto test directory and run `make` command, two binaries would be created: `mrdemo` and `mr_worker`.
+
         ```bash
             cd test && make
         ```
+
 3. **Now running the demo, once you have created all the binaries and libraries.**
     - Clear the files if any in the output directory
+
         ```bash
             rm test/output/*
         ```
+
     - Start all the worker processes in the following fashion:
+
         ```bash
             ./mr_worker localhost:50051 & ./mr_worker localhost:50052 & ./mr_worker localhost:50053 & ./mr_worker localhost:50054 & ./mr_worker localhost:50055 & ./mr_worker localhost:50056;
         ```
+
     - Then start your main map reduce process: `./mrdemo`
+
         ```bash
             ./mrdemo
         ```
+
     - Once the ./mrdemo finishes, kill all the worker proccesses you started.
         1. For Mac OS X:
+
             ```bash
                 killall mr_worker
             ```
+
         2. For Linux:
+
             ```bash
                 killall mr_worker
             ```
+
     - Check output directory to see if you have the correct results(obviously once you have done the proper implementation of your library
 
         ```

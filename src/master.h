@@ -219,9 +219,7 @@ bool Master::remoteCallReduce(const std::string& ip_addr_port,
   }
 
   // 3. finish grpc
-  if (reply.is_done()) {
-    std::cout << "map reduce job done .........." << std::endl;
-  }
+  GRP_ASSERT(reply.is_done());
 
   // 4. recover server to available
   worker_status_[ip_addr_port] = AVAILABLE;
@@ -238,5 +236,7 @@ bool Master::run() {
   notEmpty_.wait(lock, [this] { return --count_ == 1; });
   GPR_ASSERT(runReduceProc());
   notEmpty_.wait(lock, [this] { return --count_ == 1; });
+  std::cout << "map reduce job done .........." << std::endl;
+
   return true;
 }

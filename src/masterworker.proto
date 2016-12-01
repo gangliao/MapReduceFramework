@@ -4,28 +4,26 @@ package masterworker;
 
 // The masterworker service definition.
 service MasterWorker {
-	rpc mapReduce (MasterQuery) returns (WorkerReply) {}
+  rpc mapReduce(MasterQuery) returns (WorkerReply) {}
 }
 
 message WorkerReply {
-	repeated TempFiles temp_files = 1;
-	bool is_done = 2;
+  repeated TempFiles temp_files = 1;
+  bool is_done = 2;
 }
 
-message TempFiles {
-	string filename = 1;
-}
+message TempFiles { string filename = 1; }
 
 message MasterQuery {
-	repeated ShardInfo shard = 1;	// input shard
-	int32 output_num = 2;			// number of outputs
-	string location = 3;			// location of intermediate files
-	bool is_map = 4;				// map or reduce function
-	string user_id = 5;				// user id
+  repeated ShardInfo shard = 1; // input shard
+  int32 output_num = 2;         // number of outputs
+  string location = 3;          // location of intermediate files
+  bool is_map = 4;              // map or reduce function
+  string user_id = 5;           // user id
 }
 
 message ShardInfo {
-	string filename = 1;
-	int32 off_start = 2;
-	int32 off_end = 3;
+  string filename = 1;
+  int32 off_start = 2;
+  int32 off_end = 3;
 }

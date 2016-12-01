@@ -15,6 +15,8 @@ MapReduce is a programming model and an associated implementation for processing
 
 **This project can run successfully both on Linux and Mac OS X**
 
+<img src="demo/out.gif" width=80%> 
+
 1. First, make sure you already installed gRPC and its dependent `Protocol Buffers v3.0`, check out [Install Dependency](INSTALL.md)
 section to find out much more details.
 2. Compile code and generate libraries

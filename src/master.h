@@ -219,7 +219,7 @@ bool Master::remoteCallReduce(const std::string& ip_addr_port,
   }
 
   // 3. finish grpc
-  GRP_ASSERT(reply.is_done());
+  GPR_ASSERT(reply.is_done());
 
   // 4. recover server to available
   worker_status_[ip_addr_port] = AVAILABLE;

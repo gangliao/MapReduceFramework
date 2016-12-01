@@ -52,7 +52,7 @@ inline bool shard_files(const MapReduceSpec& mr_spec, std::vector<FileShard>& fi
         uint64_t fileSize = get_input_size(myfile);
 
         std::cout << "\nSplit file : " << input << " " << fileSize
-                  << " Bytes into shards ...\n" << std::endl;
+                  << " Bytes into shards ...\n";
         std::streampos offset = 0;
         uint64_t restSize = fileSize;
         while (restSize > 0) {
@@ -75,7 +75,7 @@ inline bool shard_files(const MapReduceSpec& mr_spec, std::vector<FileShard>& fi
 
             size_t chunkSize = (end - begin + 1);
             std::cout << "Process offset (" << begin << "," << end
-                      << ") " << chunkSize <<" bytes into shard ..." << std::endl;
+                      << ") " << chunkSize <<" bytes into shard ...\n";
 
             // store chunk into shards
             FileShard temp;

@@ -1,5 +1,8 @@
 # MapReduce Infrastructure
 
+MapReduce is a programming model and an associated implementation for processing and generating large data sets. Users specify a map function that processes a key/value pair to generate a set of intermediate key/value pairs, and a reduce function that merges all intermediate values associated with the same intermediate key. Programs written in this functional style are automatically parallelized and executed on a large cluster of commodity machines. The run-time system takes care of the details of partitioning the input data, scheduling the program’s execution across a set of machines, handling machine failures, and managing the required inter-machine communication.
+
+
 ## Install Dependency
 
 [How to setup the project](INSTALL.md)
@@ -82,3 +85,7 @@ section to find out much more details.
 
         0 directories, 16 files
         ```
+
+# Reference
+
+Jeffrey Dean and Sanjay Ghemawat, [MapReduce: Simplified Data Processing on Large Clusters](https://static.googleusercontent.com/media/research.google.com/en//archive/mapreduce-osdi04.pdf), 2004

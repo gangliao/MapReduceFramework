@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <utility>
+#include <cmath>
 #include <vector>
 #include "mapreduce_spec.h"
 

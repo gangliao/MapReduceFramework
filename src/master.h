@@ -16,12 +16,10 @@ using masterworker::WorkerReply;
 using masterworker::ShardInfo;
 using masterworker::TempFiles;
 
-namespace {
 enum WORKER_STATUS {
   AVAILABLE,
   BUSY,
 };
-}
 
 /* CS6210_TASK: Handle all the bookkeeping that Master is supposed to do.
         This is probably the biggest task for this project, will test your
